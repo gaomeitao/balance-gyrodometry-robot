@@ -1,0 +1,5 @@
+struct balancebot_encoders_t {     
+    int64_t timestamp;
+    int64_t left_encoder;
+    int64_t right_encoder;
+    }

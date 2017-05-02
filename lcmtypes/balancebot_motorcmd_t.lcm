@@ -1,0 +1,5 @@
+struct balancebot_motorcmd_t {     
+    int64_t timestamp;
+    float   left_speed;
+    float   right_speed;
+    }

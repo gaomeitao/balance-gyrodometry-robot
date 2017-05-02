@@ -1,0 +1,4 @@
+struct balancebot_rc_data_t {     
+    int64_t timestamp;
+    float   rc_data[8]; 
+    }
