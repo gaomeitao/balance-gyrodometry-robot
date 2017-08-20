@@ -3,13 +3,13 @@
 *	balancebot.c
 *
 *	pgaskell@umich.edu
+*	wzih@umich.edu
 *******************************************************************************/
 
 #include <lcm/lcm.h>
 #include "../robocape/src/usefulincludes.h"
 #include "../robocape/src/robocape.h"
 #include "../robocape/src/devices/motor.h"
-//#include "../lcmtypes/odometry_t.h"
 #include "../lcmtypes/balancebot_imu_t.h"
 #include "../lcmtypes/robot_path_t.h"
 #include "../lcmtypes/pose_xyt_t.h"
@@ -47,11 +47,6 @@ typedef enum bot_motion_state_t {
 	RC,
 } bot_motion_state_t;
 
-
-//typedef struct set_vel_t {
-//	float set_forward_vel;
-//	float set_angular_vel;
-//} set_vel_t;
 
 // TODO: add PID and state variables
 typedef struct botState// bot kinematic state
@@ -133,9 +128,9 @@ world_odometry world_odom;
 balancebot_imu_t balancebot_imu_data;
 
 PID balance_PID = {
-	.kp = 9.5,//8.23,//4 * 0.6,
-	.ki = 0.0,//4 * 0.6 * 1 / 2,
-	.kd = 0.2,//0.192,//4 * 0.6 * 1 / 2, 
+	.kp = 9.5,
+	.ki = 0.0,
+	.kd = 0.2,
 	.last_err = 0.0,
 	.accumulate = 0.0,
 };
@@ -150,7 +145,7 @@ PID heading_PID = {
 
 
 PID balance_angle_PID = {
-	.kp = 0.4464,//0.231,0.147, 0.005
+	.kp = 0.4464,
 	.ki = 0.0007,
 	.kd = 0.0099,
 	.last_err = 0,
@@ -181,9 +176,9 @@ PID rightPID = {
 };
 
 PID turnPID = {
-	.kp = 2 * 0.02,//0.04 * 0.5,
-	.ki = 2 * 0.02 * (0.01 /2),//0.04 * 0.5 * (3/15),
-	.kd = 2 * 0.02 * (0.01 /8),//0.04 * 0.5 * (0.03/20),
+	.kp = 2 * 0.02,
+	.ki = 2 * 0.02 * (0.01 /2),
+	.kd = 2 * 0.02 * (0.01 /8),
 	.last_err = 0,
 	.accumulate = 0,
 };
@@ -216,9 +211,9 @@ float stay_dist = 0;
 float stay_dist_prev = 0;
 float show_some_data = 0.01;
 PID demo_data = {
-	.kp = 9.5,//8.23,//4 * 0.6,
-	.ki = 0.0,//4 * 0.6 * 1 / 2,
-	.kd = 0.2,//0.192,//4 * 0.6 * 1 / 2, 
+	.kp = 9.5,
+	.ki = 0.0,
+	.kd = 0.2,
 	.last_err = 0.0,
 	.accumulate = 0.0,
 };
@@ -257,17 +252,9 @@ void init_parameters(){
 	bot_state.set_forward_vel = 0;
 	bot_state.set_forward_vel_balance = 0;
 	bot_state.set_angular_vel = 0;
-	/*adc_PID.p_scale = 1.8 / 100;
-	adc_PID.i_scale = 1.8 *10;
-	adc_PID.d_scale = 1.8 * 1;*/
 	adc_PID.p_scale = 1.8 /2;
 	adc_PID.i_scale = 1.8 *10;
 	adc_PID.d_scale = 1.8 * 20;
-	// adc_PID.p_scale = 1.8 / 100;
-	// adc_PID.i_scale = 1.8 *10;
-	// adc_PID.d_scale = 1.8 * 10;
-	// pose_xyz_stable_point.x = 0;
-	// pose_xyz_stable_point.y = 0;
 }
 
 void RC_Control(int freq_div){
@@ -295,13 +282,9 @@ void RC_Control(int freq_div){
 
 
 void robot_path_handler(const lcm_recv_buf_t *rbuf, const char * channel, const robot_path_t * msg, void * user){
-
-// your code here.  Try printing the message, accessing each element with msg->element
-// alternatively, pass it a pointer to a local lcmtype struct and print in the main loop
 	if(bot_motion_state != IDLE)
 		return;
 	int i =0;
-	//printf("Receive LCM msg from channel CONTROLLER_PATH.\n");
 	for(i=0;i<msg->path_length;i++){
 		float temp_x = msg->path[i].y;
 		float temp_y = msg->path[i].x;
@@ -332,9 +315,9 @@ int main(int argc, char *argv[]){
 	angular_filter   = create_first_order_lowpass(SAMPLE_DELTA_T*1.0, SAMPLE_DELTA_T*80.0);
 	delta_theta_gyro_filter = create_first_order_lowpass(SAMPLE_DELTA_T*1.0, SAMPLE_DELTA_T*80.0);
 	delta_theta_odom_filter = create_first_order_lowpass(SAMPLE_DELTA_T*1.0, SAMPLE_DELTA_T*80.0);
+	
 	// start printf_thread if running from a terminal
 	// if it was started as a background process then don't bother
-
 	if(isatty(fileno(stdout))){
 		pthread_t  printf_thread;
 		pthread_create(&printf_thread, NULL, printf_loop, (void*) NULL);
@@ -388,7 +371,7 @@ int main(int argc, char *argv[]){
 		lcm_handle_timeout(lcm,10000);
 		// usleep(10000);
 	}
-	cleanup_cape(); // exit cleanly
+	cleanup_cape();
     uninit_motor(left_motor);
     uninit_motor(right_motor);
 	set_cpu_frequency(FREQ_ONDEMAND);
@@ -412,7 +395,6 @@ void tune_PID(PID *p){
 }
 
 void cascade_control(){
-
 	imu_get(1);
 	odom_count+=1;
 	if(odom_count == 1){
@@ -420,9 +402,8 @@ void cascade_control(){
 		odometry_get(1);		
 	}
 	control_counter += 1;
-	if(control_counter = 20){
+	if(control_counter == 20){
 		RC_Control(15);
-		//bot_motion_control(20);
 		control_counter = 0;
 	}
 	balance_count += 1;
@@ -437,21 +418,14 @@ void cascade_control(){
 
 	bot_state.set_forward_vel_balance = -PID_Cal(&balance_PID, tilt_angle+BALANCE_ANG - bot_state.pitch, SAMPLE_DELTA_T*1);
 
-
 	float rightMotorSpeed = (bot_state.set_forward_vel_balance ) * 1 + bot_state.set_angular_vel * WHEEL_BASE / 2.0;
 	float leftMotorSpeed = (bot_state.set_forward_vel_balance ) * 1 - bot_state.set_angular_vel * WHEEL_BASE / 2.0;
-
-	// float rightMotorSpeed = (bot_state.set_forward_vel ) * 1 + bot_state.set_angular_vel * WHEEL_BASE / 2.0;
-	// float leftMotorSpeed = (bot_state.set_forward_vel ) * 1 - bot_state.set_angular_vel * WHEEL_BASE / 2.0;
 
 	leftMotorSpeed = velocity_regulate(leftMotorSpeed);
 	rightMotorSpeed = velocity_regulate(rightMotorSpeed);
 
-	
-
 	set_motor_speed(&left_motor, leftMotorSpeed);
 	set_motor_speed(&right_motor, rightMotorSpeed);
-
 }
 
 void cascade_control_with_caster(){
@@ -463,7 +437,7 @@ void cascade_control_with_caster(){
 		odometry_get(1);		
 	}
 	control_counter += 1;
-	if(control_counter = 20){
+	if(control_counter == 20){
 		//RC_Control(15);
 		bot_motion_control(20);
 		control_counter = 0;
@@ -477,58 +451,20 @@ void cascade_control_with_caster(){
 		tilt_angle = PID_Cal(&balance_angle_PID, bot_state.set_forward_vel - bot_state.fb_forward_vel, SAMPLE_DELTA_T*5);
 		balance_count = 0; 
 	}
-
 	bot_state.set_forward_vel_balance = -PID_Cal(&balance_PID, tilt_angle+BALANCE_ANG - bot_state.pitch, SAMPLE_DELTA_T*1);
-
 */
+
 	float rightMotorSpeed = (bot_state.set_forward_vel) * 1 + bot_state.set_angular_vel * WHEEL_BASE / 2.0;
 	float leftMotorSpeed = (bot_state.set_forward_vel ) * 1 - bot_state.set_angular_vel * WHEEL_BASE / 2.0;
 
-	// float rightMotorSpeed = (bot_state.set_forward_vel ) * 1 + bot_state.set_angular_vel * WHEEL_BASE / 2.0;
-	// float leftMotorSpeed = (bot_state.set_forward_vel ) * 1 - bot_state.set_angular_vel * WHEEL_BASE / 2.0;
-    demo_data.kp = rightMotorSpeed;
 	leftMotorSpeed = velocity_regulate(leftMotorSpeed*1.9);
 	rightMotorSpeed = velocity_regulate(rightMotorSpeed*1.9);
 
-	
-
 	set_motor_speed(&left_motor, leftMotorSpeed);
 	set_motor_speed(&right_motor, rightMotorSpeed);
-
 }
 
-/*
-void simple_control(){
-	imu_get(1);
-	odom_count+=1;
-	if(odom_count == 5){
-		odom_count = 0;
-		odometry_get(5);		
-	}
-	control_counter += 1;
-	if(control_counter = 10){
-		// RC_Control(10);
-		// bot_motion_control(10);
-		control_counter = 0;
-	}
-	balance_count += 1;
 
-	if(balance_count == 10){
-		heading_vel = PID_Cal(&heading_PID, bot_state.set_forward_vel - bot_state.fb_forward_vel, SAMPLE_DELTA_T*10);
-		balance_count = 0; 
-	}
-
-	bot_state.set_forward_vel_balance = -PID_Cal(&balance_PID, BALANCE_ANG - bot_state.pitch, SAMPLE_DELTA_T*1);
-	float rightMotorSpeed = (heading_vel+ bot_state.set_forward_vel_balance ) * 1 + bot_state.set_angular_vel * WHEEL_BASE / 2.0;
-	float leftMotorSpeed= (heading_vel+ bot_state.set_forward_vel_balance ) * 1 - bot_state.set_angular_vel * WHEEL_BASE / 2.0;
-	leftMotorSpeed = velocity_regulate(leftMotorSpeed);
-	rightMotorSpeed = velocity_regulate(rightMotorSpeed);
-
-	set_motor_speed(&left_motor, leftMotorSpeed);
-	set_motor_speed(&right_motor, rightMotorSpeed);
-
-}
-*/
 int balancebot_controller(){
 	if((BALANCE_ANG - bot_state.pitch)>TILT_ANGLE_CONST ||(BALANCE_ANG - bot_state.pitch)< - TILT_ANGLE_CONST)
 		return 0;
@@ -544,7 +480,7 @@ int balancebot_controller(){
 
 
 float PID_Cal(PID* pid, float err, float DT){
-	pid->accumulate += err*DT;//this is not pid.i************
+	pid->accumulate += err*DT;
 	float response = pid->kp*err + pid->ki*pid->accumulate + pid->kd * (err - pid->last_err) / DT;
 	pid->last_err = err;
 	return response;
@@ -557,14 +493,9 @@ void PID_ADC_read(){
 }
 
 float heading_pose_botgui(pose_xyt_t target_pose, world_odometry bot_pose){
-
-	    //float relative_theta = atan2(target_pose.y - bot_pose.y, target_pose.x - bot_pose.x);
-        float theta_temp = atan2(target_pose.y - bot_pose.y, target_pose.x - bot_pose.x) - bot_pose.theta;
-       // printf(" check line:%6.2f,%6.2f,%6.2f \n",relative_theta, bot_pose.theta, theta_temp);
-        return theta_regulate(theta_temp);
-    }                    
-
-
+    float theta_temp = atan2(target_pose.y - bot_pose.y, target_pose.x - bot_pose.x) - bot_pose.theta;
+    return theta_regulate(theta_temp);
+}
 
 /*************************************************************
 * path_control_read_cur_pose() and path_control_stay() are used to RC control
@@ -587,15 +518,6 @@ void bot_motion_control(int freq_div){
 		stay_dist_prev = stay_dist;
 		return;
 	}
-/*	if(bot_motion_state == RC){
-		return;
-	}*/
-	// if(path_control(path_list->path[path_idx], path_list->path[path_idx+1], freq_div)){
-	// 	path_idx += 1;
-	// 	if(path_idx == path_list->path_length - 1){
-	// 		bot_motion_state = IDLE;
-	// 	}
-	// }
 
 	float wx = world_odom.x;
 	float wy = world_odom.y;
@@ -633,27 +555,23 @@ void bot_motion_control(int freq_div){
 
 	//run the robot to desired pos and direction
 	else{
-		//when receive a new command target point, first make sure the robot is on the correct direction?
 		//pure turn, no heading
 		if( bot_motion_state == TURN){
-			// printf(" start turn : wx:%6.2f  \n",wx);
 			bot_state.set_forward_vel = 0;
 			float theta_err = heading_pose_botgui(path_list->path[path_idx], world_odom);//cur_path->path[path_idx].theta;
 			if(fabs(theta_err) < ERR_TOL_THETA){
 				bot_state.set_angular_vel = 0;
-				// printf(" finish Turn : wx:%6.2f  \n",wx);
 				bot_motion_state = RUN;
 			}
 			else{
-				// printf(" theta err ::%6.2f  \n",theta_err);
 				bot_state.set_angular_vel = theta_err<0 ? TURN_SPEED:TURN_SPEED;//4 : 4;for odom//1:1 for bot caster
 			}
 		}
 		if( bot_motion_state == RUN){
 			//the velocity can be otherwise calculated by defining a velocity profile
 			
-			//bot_state.set_forward_vel = path_vel_control(err_dist,0.2,0.1,0.02);//float path_vel_control(float err_dist, float ref_vel, float dist_cut, float delta_vel)
-			//bot_state.set_forward_vel = path_vel_control(err_dist,0.2,0.1,0.02);//0.02
+			//bot_state.set_forward_vel = path_vel_control(err_dist,0.2,0.1,0.02);
+			//bot_state.set_forward_vel = path_vel_control(err_dist,0.2,0.1,0.02);
 
 			bot_state.set_forward_vel = 0.2;
 			//calculate if the robot is right on the path
@@ -666,7 +584,6 @@ void bot_motion_control(int freq_div){
 			//result of atan func: -pi ~ pi. Dangerous range (pi + 1 = - pi -1)
 			float target_theta = atan2(cy - py, cx - px) - dir_theta * dir;
 
-			// printf(" run : dir:%6.4f  \n",target_theta);
 			float des_theta = path_list->path[path_idx].theta; 
 			//two method to make bot run on the line
 			//PID method
@@ -717,9 +634,7 @@ int path_control_stay(pose_xyt_t target_xyz, int freq_div){
 			return 1;
 	}
 	else{
-		bot_state.set_forward_vel = velocity_regulate(-0.5* err_dist); // This need to change to PID
-
-			//bot_state.set_angular_vel += PID_Cal(&pathPID, 0 - dir, 1/sample_motion_Hz);
+		bot_state.set_forward_vel = velocity_regulate(-0.5* err_dist);
 	}
 }
 /*************************************************************
@@ -730,14 +645,11 @@ int path_control(pose_xyt_t previous_xyz, pose_xyt_t target_xyz, int freq_div){
 	float wx = world_odom.x;
 	float wy = world_odom.y;
 	float wt = world_odom.theta;
-	//get target pos from command
 	float cx = target_xyz.x;
 	float cy = target_xyz.y;
 	float px = previous_xyz.x;
 	float py = previous_xyz.y;
-
 	float theta_err = heading_pose_botgui(target_xyz, world_odom);//path_list->path[path_idx].theta;
-
 
 	float err_dist = sqrt((cx - wx)*(cx - wx)   + (cy - wy)*(cy - wy));
 	if(err_dist < ERR_TOL_DIST){
@@ -746,22 +658,15 @@ int path_control(pose_xyt_t previous_xyz, pose_xyt_t target_xyz, int freq_div){
 	else{
 		if(fabs(theta_err) < ERR_TOL_THETA){
 			bot_state.set_forward_vel = 0.2;
-			//bot_state.set_forward_vel += PID_Cal(&pathPID, 0 - err_dist, 1/sample_motion_Hz);
 		}
 		else{
 			float dir = (cx - px) * (wy - py) - (cy - py) * (wx - px);
 			printf(" run : dir:%6.2f  \n",dir);
 			bot_state.set_angular_vel = PID_Cal(&pathPID, 0 - dir, 1/sample_motion_Hz);
-
-			//bot_state.set_angular_vel = theta_err<0 ? 0.05 : -0.05;
-			//bot_state.set_angular_vel += PID_Cal(&pathPID, 0 - dir, 1/sample_motion_Hz);
 		}
 	}
 
 }
-
-
-
 
 /*******************************************************************************
 *imu_get()
@@ -769,42 +674,9 @@ int path_control(pose_xyt_t previous_xyz, pose_xyt_t target_xyz, int freq_div){
 *******************************************************************************/
 
 void imu_get(int freq_div){
-/**
-
-    balancebot_imu_data.timestamp = micros_since_epoch();
-
-    balancebot_imu_data.accel[0] = imu_data.accel[0];
-    balancebot_imu_data.accel[1] = imu_data.accel[1];
-    balancebot_imu_data.accel[2] = imu_data.accel[2];
-
-    balancebot_imu_data.gyro[0] = imu_data.gyro[0];
-    balancebot_imu_data.gyro[1] = imu_data.gyro[1];
-    balancebot_imu_data.gyro[2] = imu_data.gyro[2];
-
-    balancebot_imu_data.mag[0] = imu_data.mag[0];
-    balancebot_imu_data.mag[1] = imu_data.mag[1];
-    balancebot_imu_data.mag[2] = imu_data.mag[2];
-
-    balancebot_imu_data.temp = imu_data.temp;
-
-	balancebot_imu_data.TB_angles[0] = imu_data.dmp_TaitBryan[TB_PITCH_X];
-    balancebot_imu_data.TB_angles[1] = imu_data.dmp_TaitBryan[TB_ROLL_Y];
-    balancebot_imu_data.TB_angles[2] = imu_data.dmp_TaitBryan[TB_YAW_Z];
-
-    balancebot_imu_data.quat[0] = imu_data.dmp_quat[0];
-    balancebot_imu_data.quat[1] = imu_data.dmp_quat[1];
-    balancebot_imu_data.quat[2] = imu_data.dmp_quat[2];
-    balancebot_imu_data.quat[3] = imu_data.dmp_quat[3];
-
-**/
-
 	float sample_imu_Hz = SAMPLE_RATE_HZ/freq_div;
-
-	// bot_state.pitchSpeed = imu_data.gyro[0];
 	bot_state.pitchSpeed = (imu_data.dmp_TaitBryan[TB_PITCH_X] - bot_state.pitch)/sample_imu_Hz;
 	bot_state.pitch = imu_data.dmp_TaitBryan[TB_PITCH_X];
-
-	// bot_state.yawSpeed = imu_data.gyro[2];
 	bot_state.yawSpeed = (imu_data.dmp_TaitBryan[TB_YAW_Z] - bot_state.yaw)/sample_imu_Hz;
 	bot_state.yaw = imu_data.dmp_TaitBryan[TB_YAW_Z];	
 }
@@ -840,10 +712,6 @@ void odometry_get(int freq_div){
 	float forward_vel = delta_xr*sample_odom_Hz;
 	float angular_vel = delta_theta*sample_odom_Hz;
 
-	// update data in bot_state (global structure variable)
-    // bot_state.fb_forward_vel = forward_vel;
-    // bot_state.fb_angular_vel = angular_vel;
-
     bot_state.fb_forward_vel = march_filter(&velocity_filter, forward_vel);
     bot_state.fb_angular_vel = march_filter(&angular_filter, angular_vel);
 
@@ -870,23 +738,17 @@ void odometry_get(int freq_div){
 	//updating world state 	
 	world_odom.x = world_odom.x + delta_xr*cos(world_odom.theta) - delta_yr*sin(world_odom.theta);
 	world_odom.y = world_odom.y + delta_xr*sin(world_odom.theta) - delta_yr*cos(world_odom.theta);
-
-
 	// publishing lcm commands assigning theta after gryrodometry
  	pose_xyz.utime = micros_since_epoch();
 	pose_xyz.x = world_odom.y;
 	pose_xyz.y = world_odom.x;
 	pose_xyz.theta = -world_odom.theta + PI_val/2;
-	// pose_xyz.x = world_odom.x + delta_xr*cos(pose_xyz.theta) - delta_yr*sin(pose_xyz.theta);
-	// pose_xyz.y = world_odom.y + delta_xr*sin(pose_xyz.theta) - delta_yr*cos(pose_xyz.theta);
-	
 }
 /*******************************************************************************
 * theta_regulate()
 * check angle to make it range -Pi ~ +Pi
 *******************************************************************************/
 float theta_regulate(float theta){
-	
     while ((theta<-PI_val)||(theta>PI_val)){
     	if (theta < -PI_val)
     		theta = theta + PI_val*2;
@@ -900,15 +762,10 @@ float theta_regulate(float theta){
 * check forward velocity to make it range -1 ~ +1
 *******************************************************************************/
 float velocity_regulate(float vel){
-
 	if (vel < -0.99)
 		vel = -0.99;
 	if (vel > 0.99)
 		vel = 0.99;
-	// if (fabs(vel) < 0.05 && vel>0)
-	// 	vel = 0.05;
-	// if (fabs(vel) < 0.05 && vel<0)
-	// 	vel = -0.05;
     return vel;
 }
 
@@ -917,13 +774,10 @@ float velocity_regulate(float vel){
 *
 *******************************************************************************/
 void setup_motors(){
-// TODO: INITIALIZE THE MOTORS
 // use set_encoder_pos and init_motor commands
 	//init_motor, depend on the wiring, from test_motor.c
 	left_motor = init_motor(0,'A',66,67);
 	right_motor = init_motor(0,'B',68, 69);
-	//motor econder pos must be 1 or 2;
-	//init both to 0;
 	set_encoder_pos(1,0);
 	set_encoder_pos(2,0);
 }
