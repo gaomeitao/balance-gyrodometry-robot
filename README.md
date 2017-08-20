@@ -113,7 +113,82 @@ Balance and Speed Control:
   <img src="./misc/balance_control.jpg" width="550"/>
 </p>
 
+## Results Analysis
 
+The following discussion details the results of the various tasks that were set for us and includes an analysis of the log data that was obtained from both the Optitrack and the robot.
+
+### Driving in a square with caster wheels
+
+We command the robot (with caster wheels) to drive a 1m long square path three times to see the bias and error in odemetry and gyrodometry implementations.
+
+Odometry with wheels mode trajectory map:
+
+<p align="center">
+  <img src="./misc/Odo_wheel_1.png" width="550"/>
+</p>
+
+Path and error plot of robot with odometry and caster wheel:
+
+<p align="center">
+  <img src="./misc/odo_wheel.png" width="550"/>
+</p>
+
+Path trace of robot with gyrodometry and caster wheels:
+
+<p align="center">
+  <img src="./misc/Gyro_wheel_1.png" width="550"/>
+</p>
+
+While driving in a square, it was seen that the robot stopped abruptly at each corner which jerked the caster wheel up momentarily before turning on spot. This behavior was predictable at each corner and this also confirmed the fact that the robot consistently accumulated more drift and error in every consecutive round in a predictable manner. From the data, it can be seen that the errors for each round lie within a certain range and that the performance of the robot is better when gyrodometry is applied rather than odometry.
+
+Wheel slippage over smooth surfaces causes error in orientation that results in increasing positional errors in odometry over time. As gyrodometry accounts for such slipping with its IMU data, the error in position is significantly reduced. However, we find that yaw angle still drifts over time. Even after calibration, the rate of drift in yaw can only be limited to a certain range and not completely eliminated. 
+
+### RC Driving
+
+Three test cases were used to test the effectiveness of the control scheme: holding a stationary waypoint, turning on spot and over a distance, and moving along a straight line. 
+
+Path traces for RC controlled driving mode - turning:
+
+<p align="center">
+  <img src="./misc/RC_gui.PNG" width="550"/>
+</p>
+
+RC controlled driving mode - Holding a waypoint:
+
+<p align="center">
+  <img src="./misc/RC_stay.png" width="550"/>
+</p>
+
+RC controlled driving mode - pure translation:
+
+<p align="center">
+  <img src="./misc/RC_forward.png" width="550"/>
+</p>
+
+RC controlled driving - turning:
+
+<p align="center">
+  <img src="./misc/RC_turn.png" width="550"/>
+</p>
+
+### Driving in a square without caster wheel
+
+We find that the performance of driving in a square with a  caster wheel and the performance of driving in a square without a caster wheel works better when gyrodometry is applied rather than pure odometry.
+
+The performance of the robot when not equipped with a caster wheel is better and we attribute it to the reason that the caster wheel in our design is not in the center, and the friction gives a bias to the turning velocity, which disturbs the controller. Since the accumulated bias for each square is constant and predictable, a reasonable turning speed offset and a small angle error check could enhance the performance of the square driving. However, the speed offset method doesn't make sense in real world indoor navigation. A better idea would be to use more reliable methods such as SLAM (Simultaneous localization and mapping).
+
+
+Path traces for robot with balancing with gyrodometry:
+
+<p align="center">
+  <img src="./misc/balanced_gyrodometry_screenshot.png" width="550"/>
+</p>
+
+Balancing and gyrodometry without caster wheel:
+
+<p align="center">
+  <img src="./misc/Balance_without_wheels.png" width="550"/>
+</p>
 
 ## Acknowledgment
 
