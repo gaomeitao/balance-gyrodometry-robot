@@ -9,9 +9,13 @@ Blance bot:
 The main objective of this project is to implement a gyrodometric-based dead-reckoning navigation system on a differential drive robot, and to control the pitch angle, velocity and position of the robot using a cascade control scheme and sensor feedback to maintain balance while traversing a commanded path even when disturbance is introduced in the system. Various test cases are implemented to test robot navigation and analyze resultant error. Optitrack motion tracking system provides ground truth values that are compared against the robot's gyrodometry and odometry data. The project also introduces a propeller design as a possible additional control system that can balance the robot even beyond tipping angles (even though it's a trivial part).
 
 
-More technical details please see [project paper](./misc/gyrodometric-based-navigation.pdf).
+More technical details please see **[project paper](./misc/gyrodometric-based-navigation.pdf).
 
+Some videos can be seen in links as below :
 
+[Turning while balance](https://youtu.be/gzQzG5Tj89U)
+
+[Running for one square](https://youtu.be/uLh4s9SAewY)
 
 ## Hardware Architecture
 
