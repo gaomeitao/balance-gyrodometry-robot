@@ -13,9 +13,9 @@ More technical details please see **[project paper](./misc/gyrodometric-based-na
 
 Some videos can be seen in links as below :
 
-[Turning while balance](https://youtu.be/gzQzG5Tj89U)
+[Turning while balance](https://youtu.be/QYu1Cye-YmU)
 
-[Running for one square](https://youtu.be/uLh4s9SAewY)
+[Running for one square](https://youtu.be/KdWuRw1v8Zw)
 
 ## Hardware Architecture
 
